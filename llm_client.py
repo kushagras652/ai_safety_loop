@@ -48,5 +48,24 @@ def _extract_json(text:str)->Optional[Any]:
             return None
     return None
 
-def call_llm_structured()
+def call_llm_structured(system_prompt:str,user_input:str,temperature:float= 0.0,max_retries: int=2,)-> Dict:
+
+    prompt=system_prompt
+    last_raw=""
+    for attempt in range(max_retries+1):
+        last_raw=call_llm(
+            system_prompt=prompt,
+            user_input=user_input,
+            temperature=temperature,
+        )
+        parsed=_extract_json(last_raw)
+        if isinstance(parsed, (dict,list)):
+            return parsed
+
+        prompt=(
+            system_prompt
+            +"\n\nIMPORTANT: Your previous reply was not valid JSON."
+            "Reply with ONLY a single valid JSON object.No prose, no code fences."
+        )
+    raise ValueError(f"Model did not return valid JSON after retries. Last reply:\n{last_raw}")
     
